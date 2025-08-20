@@ -1,0 +1,11 @@
+@model BusTicketBooking.Models.Route
+@{
+    ViewData["Title"] = "Xóa tuyến đường";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h3>Xóa tuyến đường</h3>
+<div class="alert alert-warning">Bạn có chắc muốn xóa tuyến @Model.DepartureCityId - @Model.DestinationCityId ?</div>
+<form method="post">
+    <button class="btn btn-danger">Xóa</button>
+    <a href="/Routes" class="btn btn-secondary">Hủy</a>
+</form>

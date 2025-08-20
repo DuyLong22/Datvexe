@@ -1,0 +1,11 @@
+@model BusTicketBooking.Models.User
+@{
+    ViewData["Title"] = "Xóa người dùng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h3>Xóa người dùng</h3>
+<div class="alert alert-warning">Bạn có chắc muốn xóa @Model.Email ?</div>
+<form method="post">
+    <button class="btn btn-danger">Xóa</button>
+    <a href="/Users" class="btn btn-secondary">Hủy</a>
+</form>

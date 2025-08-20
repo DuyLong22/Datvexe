@@ -1,0 +1,60 @@
+﻿.card {
+    border-radius: 15px; /* Bo tròn góc */
+    overflow: hidden; /* Ẩn phần ảnh thừa khi bo góc */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-img-top {
+    transition: transform 0.4s ease;
+}
+
+.swap-btn {
+    background: #1e3c72;
+    color: #fff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin: 0 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+    .swap-btn:hover {
+        background: #16325c;
+        transform: rotate(180deg);
+    }
+
+    .swap-btn i {
+        font-size: 18px;
+        transition: transform 0.3s ease;
+    }
+
+/* Animation mượt khi hiện dropdown */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    from
+
+{
+    transform: rotate(0deg);
+}
+
+to {
+    transform: rotate(360deg);
+}
+}

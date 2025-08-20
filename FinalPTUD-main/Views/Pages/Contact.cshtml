@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "Liên hệ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="p-4 bg-light rounded shadow-sm animate__animated animate__fadeIn">
+    <h2 class="mb-3">Liên hệ với chúng tôi</h2>
+    <p>Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, vui lòng liên hệ qua thông tin sau:</p>
+
+    <ul class="list-unstyled">
+        <li><strong>Địa chỉ:</strong> 1138 Huỳnh Tấn Phát, huyện Nhà Bè, TP.HCM</li>
+        <li><strong>Email:</strong> support@gobus.com</li>
+        <li><strong>Hotline:</strong> 1900 1234</li>
+    </ul>
+
+    <h4 class="mt-4">Gửi tin nhắn</h4>
+    <form method="post" action="#">
+        <div class="mb-3">
+            <label class="form-label">Họ và tên</label>
+            <input type="text" class="form-control" name="name" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" name="email" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Nội dung</label>
+            <textarea class="form-control" name="message" rows="4" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Gửi</button>
+    </form>
+</div>

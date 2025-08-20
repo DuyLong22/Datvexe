@@ -1,0 +1,16 @@
+@model BusTicketBooking.Models.User
+@{
+    ViewData["Title"] = "Sửa người dùng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h3>Sửa người dùng</h3>
+<form method="post">
+    <input type="hidden" asp-for="UserId" />
+    <div class="mb-3"><label class="form-label">Tên</label><input class="form-control" asp-for="Name" /></div>
+    <div class="mb-3"><label class="form-label">Email</label><input class="form-control" asp-for="Email" /></div>
+    <div class="mb-3"><label class="form-label">Quyền (Admin/User)</label><input class="form-control" asp-for="Role" /></div>
+    <div class="mb-3"><label class="form-label">Phone</label><input class="form-control" asp-for="Phone" /></div>
+    <div class="mb-3"><label class="form-label">PasswordHash (nếu muốn đổi mật khẩu hãy nhập hash mới)</label><input class="form-control" asp-for="PasswordHash" /></div>
+    <button class="btn btn-primary">Lưu</button>
+    <a href="/Users" class="btn btn-secondary">Hủy</a>
+</form>

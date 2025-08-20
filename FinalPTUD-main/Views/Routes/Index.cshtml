@@ -1,0 +1,27 @@
+@model IEnumerable<BusTicketBooking.Models.Route>
+@{
+    ViewData["Title"] = "Tuyến đường";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Tuyến đường</h3>
+    <a class="btn btn-primary" href="/Routes/Create">Thêm</a>
+</div>
+<table class="table table-striped">
+    <thead><tr><th>ID</th><th>Điểm đi</th><th>Điểm đến</th><th>Km</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var r in Model)
+    {
+        <tr>
+            <td>@r.RouteId</td>
+            <td>@r.DepartureCity?.CityName</td>
+            <td>@r.DestinationCity?.CityName</td>
+            <td>@r.Distance</td>
+            <td>
+                <a class="btn btn-sm btn-warning" href="/Routes/Edit/@r.RouteId">Sửa</a>
+                <a class="btn btn-sm btn-danger" href="/Routes/Delete/@r.RouteId">Xóa</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

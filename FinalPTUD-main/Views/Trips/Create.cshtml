@@ -1,0 +1,40 @@
+@model BusTicketBooking.Models.Trip
+@{
+    ViewData["Title"] = "Thêm chuyến xe";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var routes = (IEnumerable<BusTicketBooking.Models.Route>)ViewBag.Routes;
+}
+<h3>Thêm chuyến xe</h3>
+<form method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label class="form-label">Tuyến đường</label>
+        <select class="form-select" asp-for="RouteId">
+            @foreach (var r in routes)
+            {
+                <option value="@r.RouteId">@r.DepartureCity?.CityName → @r.DestinationCity?.CityName</option>
+            }
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Tên xe</label>
+        <input class="form-control" asp-for="BusName" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Khởi hành</label>
+        <input class="form-control" asp-for="DepartureTime" type="datetime-local" value="@Model.DepartureTime.ToString("yyyy-MM-ddTHH:mm")" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Đến nơi</label>
+        <input class="form-control" asp-for="ArrivalTime" type="datetime-local" value="@Model.ArrivalTime.ToString("yyyy-MM-ddTHH:mm")" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Giá</label>
+        <input class="form-control" asp-for="Price" type="number" step="1000" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Ảnh xe (tùy chọn)</label>
+        <input type="file" name="imageFile" class="form-control" />
+    </div>
+    <button class="btn btn-primary">Lưu</button>
+    <a href="/Trips" class="btn btn-secondary">Hủy</a>
+</form>

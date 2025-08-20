@@ -1,0 +1,26 @@
+@model IEnumerable<BusTicketBooking.Models.Ticket>
+@{
+    ViewData["Title"] = "Quản lý vé";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="d-flex justify-content-between align-items-center mb-3">
+<h3>Quản lý vé</h3>
+</div>
+
+<table class="table table-striped">
+    <thead><tr><th>Mã</th><th>Khách</th><th>Chuyến</th><th>Ghế</th><th>Ngày đặt</th><th>Ngày giờ khởi hành</th> <!-- cột mới --><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var v in Model)
+    {
+        <tr>
+            <td>@v.Code</td>
+            <td>@v.User!.Name (@v.User!.Email)</td>
+            <td>@v.Trip!.Route!.DepartureCity?.CityName → @v.Trip!.Route!.DestinationCity?.CityName - @v.Trip!.BusName</td>
+            <td>@v.SeatNumber</td>
+            <td>@v.BookingDate</td>
+            <td>@v.Trip!.DepartureTime.ToString("dd/MM/yyyy HH:mm")</td> <!-- hiển thị khởi hành -->
+            <td>@v.Status</td>
+        </tr>
+    }
+    </tbody>
+</table>

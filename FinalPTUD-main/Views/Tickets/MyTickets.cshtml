@@ -1,0 +1,79 @@
+@model IEnumerable<BusTicketBooking.Models.TicketGroupViewModel>
+
+@{
+    ViewData["Title"] = "Vé của tôi";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="bi bi-ticket-perforated-fill me-2"></i> Vé của tôi</h4>
+    </div>
+    <div class="card-body">
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success">@TempData["Message"]</div>
+        }
+
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã vé</th>
+                    <th>Chuyến</th>
+                    <th>Ghế</th>
+                    <th>Ngày đặt</th>
+                    <th>Ngày giờ khởi hành</th>
+                    <th>Giá vé</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var v in Model)
+                {
+                    <tr>
+                        <td><strong>@v.Code</strong></td>
+                        <td>
+                            @v.Trip!.Route!.DepartureCity?.CityName →
+                            @v.Trip!.Route!.DestinationCity?.CityName <br />
+                            <small class="text-muted">@v.Trip!.BusName</small>
+                        </td>
+                        <td>@string.Join(", ", v.SeatNumber)</td>
+                        <td>@v.BookingDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@v.Trip!.DepartureTime.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><strong>@(v.Price* v.SeatNumber.Count).ToString("N0")đ</strong></td>
+                        <td>
+                            @if (v.Status == "Confirmed")
+                            {
+                                <span class="badge bg-success">Đã xác nhận</span>
+                            }
+                            else if (v.Status == "Pending")
+                            {
+                                <span class="badge bg-warning text-dark">Chờ thanh toán</span>
+                            }
+                            else if (v.Status == "Cancelled")
+                            {
+                                <span class="badge bg-danger">Đã hủy</span>
+                            }
+                        </td>
+                        <td>
+                            @if (v.Status == "Pending")
+                            {
+                                <form asp-controller="Tickets" asp-action="Pay" method="post">
+                                    <input type="hidden" name="ticketId" value="@v.TicketId" />
+                                    <button type="submit" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-credit-card"></i> Thanh toán
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="text-muted">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

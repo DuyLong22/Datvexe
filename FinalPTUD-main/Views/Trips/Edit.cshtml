@@ -1,0 +1,57 @@
+@model BusTicketBooking.Models.Trip
+@{
+    ViewData["Title"] = "Sửa chuyến xe";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var routes = (IEnumerable<BusTicketBooking.Models.Route>)ViewBag.Routes;
+}
+<h3>Sửa chuyến xe</h3>
+
+<form method="post" enctype="multipart/form-data">
+    <div class="mb-3">
+        <label class="form-label">Tuyến đường</label>
+        <select class="form-select" asp-for="RouteId">
+            @foreach (var r in routes)
+            {
+                <option value="@r.RouteId" selected="@(r.RouteId == Model.RouteId)">
+                    @r.DepartureCityId → @r.DestinationCityId
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Tên xe</label>
+        <input class="form-control" asp-for="BusName" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Khởi hành</label>
+        <input class="form-control" asp-for="DepartureTime" type="datetime-local" 
+               value="@Model.DepartureTime.ToString("yyyy-MM-ddTHH:mm")" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Đến nơi</label>
+        <input class="form-control" asp-for="ArrivalTime" type="datetime-local"
+               value="@Model.ArrivalTime.ToString("yyyy-MM-ddTHH:mm")" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Giá</label>
+        <input class="form-control" asp-for="Price" type="number" step="1000" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Ảnh xe (tùy chọn)</label>
+        @if (!string.IsNullOrEmpty(Model.ImagePath))
+        {
+            <div class="mb-2">
+                <img src="@Url.Content(Model.ImagePath)" alt="Ảnh xe hiện tại" style="max-width:200px; height:auto;" />
+            </div>
+        }
+        <input type="file" name="imageFile" class="form-control" />
+    </div>
+
+    <button class="btn btn-primary">Lưu</button>
+    <a href="/Trips" class="btn btn-secondary">Hủy</a>
+</form>

@@ -1,0 +1,665 @@
+﻿@model IEnumerable<BusTicketBooking.Models.Trip>
+@{
+    ViewData["Title"] = "Trang chủ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-box {
+        display: flex;
+        align-items: stretch;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        max-width: 1300px;
+        height: 100px;
+        margin: auto;
+        position: relative;
+    }
+
+    .search-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 16px;
+        font-size: 14px;
+        flex: 1;
+        border-right: 1px solid #eee;
+        position: relative;
+    }
+
+    .search-item i {
+        font-size: 20px;
+    }
+
+        .search-item:last-of-type {
+            border-right: none;
+        }
+
+        .search-item label {
+            font-size: 14px;
+            color: #000;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .search-item .value {
+            font-weight: bold;
+            font-size: 14px;
+            color: #000;
+        }
+
+        .search-item input[type="text"] {
+            border: none;
+            outline: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #000;
+        }
+
+        .search-item input[type="date"] {
+            border: none;
+            outline: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #000;
+        }
+
+    .add-return {
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 14px;
+    }
+
+    .swap-icon {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: -18px;
+        background: #fff;
+        border-radius: 50%;
+        border: 1px solid #ddd;
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 2;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+        .swap-icon i {
+            font-size: 20px;
+            color: #444;
+        }
+
+    .to-box {
+        padding-left: 40px;
+    }
+
+    .search-btn {
+        background: #1e3c72;
+        color: #fff;
+        border: none;
+        padding: 0 24px;
+        font-size: 15px;
+        font-weight: bold;
+        cursor: pointer;
+        border-radius: 0 12px 12px 0;
+        transition: background 0.2s;
+        flex-shrink: 0;
+    }
+
+        .search-btn:hover {
+            background: #1e3c72;
+        }
+
+    #returnWrapper {
+        display: none !important;
+    }
+
+    .add-return {
+        display: none !important;
+    }
+
+    /* Ẩn calendar icon trong input date */
+    input[type="date"]::-webkit-calendar-picker-indicator {
+        opacity: 0;
+        display: none;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    /* ===============================
+           STYLE DROPDOWN TỈNH THÀNH
+           =============================== */
+
+    /* Container của dropdown */
+    .city-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 360px;
+        max-height: 420px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        overflow-y: auto;
+        display: none; /* Mặc định ẩn */
+        z-index: 1000;
+        padding: 12px;
+        font-family: "Segoe UI", sans-serif;
+        animation: fadeIn 0.2s ease-in-out;
+    }
+
+
+    /* Từng phần trong dropdown */
+    .dropdown-section {
+        margin-bottom: 12px;
+    }
+
+    /* Tiêu đề phần */
+    .dropdown-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #000;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+    }
+
+    /* Danh sách thành phố (chỉ hiển thị 5 tỉnh, có cuộn) */
+    #cityList-from,
+    #cityList-to {
+        max-height: 200px; /* Khoảng 5 dòng */
+        overflow-y: auto;
+        padding-right: 6px; /* để thanh cuộn không che chữ */
+    }
+
+    /* Từng item trong danh sách */
+    .city-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 15px;
+        font-weight: 600;
+        color: #000000D9;
+        border-bottom: 1px solid #ddd; /* Đường kẻ ngăn cách */
+    }
+
+        .city-item:hover {
+            background: #f0f7ff;
+            color: #007bff;
+        }
+
+    /* Vùng tìm kiếm gần đây */
+    .recent-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .recent-item {
+        background: #f5f5f5;
+        border-radius: 20px;
+        padding: 6px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #555;
+    }
+
+        .recent-item:hover {
+            background: #007bff;
+            color: #fff;
+        }
+
+    /* Thanh phân cách */
+    .city-dropdown hr {
+        border: none;
+        border-top: 1px solid #eee;
+        margin: 10px 0;
+    }
+
+    /* Tùy chỉnh thanh cuộn */
+    #cityList-from::-webkit-scrollbar,
+    #cityList-to::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    #cityList-from::-webkit-scrollbar-track,
+    #cityList-to::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    #cityList-from::-webkit-scrollbar-thumb,
+    #cityList-to::-webkit-scrollbar-thumb {
+        background: #bbb;
+        border-radius: 4px;
+        transition: background 0.3s;
+    }
+
+        #cityList-from::-webkit-scrollbar-thumb:hover,
+        #cityList-to::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+</style>
+
+<!-- Banner Slider -->
+@section Banner {
+    <div id="bannerCarousel" class="carousel slide carousel-fade w-100" data-bs-ride="carousel" data-bs-interval="3000" style="margin:0; padding:0;">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#bannerCarousel" data-bs-slide-to="2"></button>
+        </div>
+        <div class="carousel-inner" style="height:550px; overflow:hidden;">
+            <div class="carousel-item active">
+                <img src="/images/banner.jpg" class="d-block w-100" style="object-fit:contain;">
+            </div>
+            <div class="carousel-item">
+                <img src="/images/banner2.png" class="d-block w-100" style="object-fit:contain;">
+            </div>
+            <div class="carousel-item">
+                <img src="/images/banner3.jpg" class="d-block w-100" style="object-fit:contain;">
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon"></span>
+        </button>
+    </div>
+}
+
+<form asp-controller="Trips" asp-action="Index" asp-area="User" method="get" class="search-box mb-4">
+    <!-- Từ -->
+    <div class="search-item" id="fromBox">
+        <i class="bi bi-bus-front"></i>
+        <div>
+            <label style="font-weight:bold">TỪ</label>
+            <input type="text" id="from" name="from" placeholder="Nhập điểm đi" autocomplete="off"
+                   value="@ViewBag.From" data-initial="@ViewBag.From" />
+        </div>
+
+        <!-- Dropdown lớn -->
+        <div id="fromDropdown" class="city-dropdown">
+            <div class="dropdown-section">
+                <div class="dropdown-title">TỈNH/THÀNH PHỐ</div>
+                <div id="cityList-from"></div>
+            </div>
+            <hr>
+            <div class="dropdown-section">
+                <div class="dropdown-title">TÌM KIẾM GẦN ĐÂY</div>
+                <div class="recent-list" id="recent-from"></div>
+            </div>
+        </div>
+
+        <!-- Nút đổi vị trí -->
+        <div class="swap-icon" onclick="swapLocations(this)">
+            <i class="bi bi-arrow-left-right"></i>
+        </div>
+    </div>
+
+    <!-- Đến -->
+    <div class="search-item to-box">
+        <i class="bi bi-bus-front"></i>
+        <div>
+            <label style="font-weight:bold">ĐẾN</label>
+            <input type="text" id="to" name="to" placeholder="Nhập điểm đến" autocomplete="off"
+                   value="@ViewBag.To" data-initial="@ViewBag.To" />
+        </div>
+
+        <!-- Dropdown lớn -->
+        <div id="toDropdown" class="city-dropdown">
+            <div class="dropdown-section">
+                <div class="dropdown-title">TỈNH/THÀNH PHỐ</div>
+                <div id="cityList-to"></div>
+            </div>
+            <hr>
+            <div class="dropdown-section">
+                <div class="dropdown-title">TÌM KIẾM GẦN ĐÂY</div>
+                <div class="recent-list" id="recent-to"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ngày đi -->
+    <div class="search-item">
+        <i class="bi bi-calendar-event"></i>
+        <div>
+            <label style="font-weight:bold">NGÀY ĐI</label>
+            <input type="text" id="ngaydi" name="date" placeholder="Chọn ngày đi"
+                   value="@ViewBag.Date" readonly />
+        </div>
+    </div>
+
+    <!-- Ngày về -->
+    <div class="search-item" id="returnWrapper" style="display:none;">
+        <i class="bi bi-calendar-event"></i>
+        <div>
+            <label style="font-weight:bold">NGÀY VỀ</label>
+            <input type="text" id="ngayve" name="returnDate" placeholder="Chọn ngày về" />
+        </div>
+    </div>
+
+    <div class="search-item add-return" onclick="addReturnDate()">
+        <i class="bi bi-plus-lg" style="color: #0d6efd;"></i>
+        <span>Thêm ngày về</span>
+    </div>
+
+    <button type="submit" class="search-btn">TÌM KIẾM XE KHÁCH</button>
+</form>
+
+<script>
+    function swapLocations(btn) {
+        let fromInput = document.getElementById("from");
+        let toInput = document.getElementById("to");
+        let temp = fromInput.value;
+        fromInput.value = toInput.value;
+        toInput.value = temp;
+
+        btn.classList.add("rotate");
+        setTimeout(() => btn.classList.remove("rotate"), 500);
+    }
+
+    let isRoundTrip = false;
+
+    function addReturnDate() {
+        isRoundTrip = true;
+        document.querySelector(".add-return").style.display = "none";
+        document.getElementById("returnWrapper").style.display = "flex";
+    }
+
+    // Flatpickr
+    flatpickr("#ngaydi", { dateFormat: "d/m/Y", minDate: "today", clickOpens: true });
+    flatpickr("#ngayve", { dateFormat: "d/m/Y", minDate: "today", clickOpens: true });
+
+    // Load cities dropdown và hỗ trợ reset về giá trị ban đầu
+    function loadCities(inputId, dropdownId) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(dropdownId);
+        const initialValue = input.dataset.initial;
+
+        input.addEventListener("focus", () => {
+            document.querySelectorAll(".city-dropdown").forEach(dd => dd.style.display = "none");
+
+            fetch("/Cities/GetAllCities")
+                .then(res => res.json())
+                .then(data => {
+                    let cityList = document.getElementById(`cityList-${inputId}`);
+                    cityList.innerHTML = "";
+
+                    data.forEach(city => {
+                        let div = document.createElement("div");
+                        div.textContent = city.cityName || city.CityName;
+                        div.classList.add("city-item");
+                        div.onclick = () => {
+                            input.value = div.textContent;
+                            input.dataset.selected = "true";
+                            dropdown.style.display = "none";
+                        };
+                        cityList.appendChild(div);
+                    });
+
+                    renderRecent(inputId);
+                    dropdown.style.display = "block";
+                });
+        });
+
+        // Khi blur, nếu không chọn gì => reset về giá trị ban đầu
+        input.addEventListener("blur", () => {
+            setTimeout(() => {
+                if (!input.dataset.selected || input.value.trim() === "") {
+                    input.value = initialValue;
+                }
+                input.dataset.selected = "false";
+            }, 150);
+        });
+    }
+
+    function renderRecent(inputId) {
+        let key = `recent-${inputId}`;
+        let recent = JSON.parse(localStorage.getItem(key)) || [];
+        let container = document.getElementById(`recent-${inputId}`);
+        container.innerHTML = "";
+        recent.forEach(r => {
+            let span = document.createElement("span");
+            span.classList.add("recent-item");
+            span.textContent = r;
+            span.onclick = () => {
+                document.getElementById(inputId).value = r;
+                document.getElementById(`${inputId}Dropdown`).style.display = "none";
+            };
+            container.appendChild(span);
+        });
+    }
+
+    // Click ra ngoài đóng dropdown
+    document.addEventListener("click", (e) => {
+        if (!e.target.closest(".search-item")) {
+            document.querySelectorAll(".city-dropdown").forEach(dd => dd.style.display = "none");
+        }
+    });
+
+    // Khởi tạo
+    loadCities("from", "fromDropdown");
+    loadCities("to", "toDropdown");
+</script>
+
+
+<style>
+    h2 {
+        padding: 40px 0 50px 0;
+    }
+</style>
+<h2 id="tripCount">Danh sách chuyến xe (@Model?.Count() ?? 0 chuyến)</h2>
+
+<div class="container my-4">
+    <div class="row">
+        <!-- Sidebar bộ lọc -->
+        <div class="col-md-3">
+            <div class="bg-white p-3 rounded shadow-sm">
+                <h5 class="mb-3">Bộ lọc tìm kiếm</h5>
+
+                <!-- Giảm giá -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input filter" type="checkbox" id="discountOnly" data-filter="discount">
+                    <label class="form-check-label" for="discountOnly">Chỉ chuyến có giảm giá</label>
+                </div>
+
+                <!-- Giờ đi -->
+                <label class="form-label">Giờ đi</label>
+                <select class="form-select mb-3 filter" data-filter="hour">
+                    <option value="">Tất cả</option>
+                    <option value="0-6">0:00 - 6:00</option>
+                    <option value="6-12">6:00 - 12:00</option>
+                    <option value="12-18">12:00 - 18:00</option>
+                    <option value="18-24">18:00 - 24:00</option>
+                </select>
+
+                <!-- Giá vé -->
+                <label class="form-label">Giá vé</label>
+                <select class="form-select mb-3 filter" data-filter="price">
+                    <option value="">Tất cả</option>
+                    <option value="0-200000">0 - 200.000đ</option>
+                    <option value="200000-400000">200.000 - 400.000đ</option>
+                    <option value="400000-600000">400.000 - 600.000đ</option>
+                    <option value="600000-1000000">600.000 - 1.000.000đ</option>
+                </select>
+
+                <!-- Nhà xe -->
+                <label class="form-label">Nhà xe</label>
+                <select class="form-select mb-3 filter" data-filter="busCompany">
+                    <option value="">Tất cả</option>
+                    <option value="Nhà xe A">Nhà xe A</option>
+                    <option value="Nhà xe B">Nhà xe B</option>
+                    <option value="Nhà xe C">Nhà xe C</option>
+                </select>
+
+                <button id="resetFilter" class="btn btn-secondary w-100 mt-2">Xóa bộ lọc</button>
+            </div>
+        </div>
+
+        <!-- Danh sách chuyến xe -->
+        <div class="col-md-9">
+            <div id="tripContainer">
+                @foreach (var trip in Model)
+                {
+                    int totalSeats = 45;
+                    int bookedSeats = trip.Tickets?.Count(t => t.Status != "Cancelled") ?? 0;
+                    int availableSeats = totalSeats - bookedSeats;
+
+                    <div class="col-md-12 mb-3 trip-card"
+                         data-hour="@trip.DepartureTime.Hour"
+                         data-price="@trip.Price"
+                         data-bus="@trip.BusName"
+                     >
+                        <div class="card shadow-sm p-3 d-flex flex-row align-items-center w-100" style="height: 200px;">
+                            <!-- Hình xe -->
+                            <img src="@trip.ImagePath" class="img-fluid" style="width:150px; height:157px; object-fit:cover;" alt="@trip.BusName">
+
+                            <!-- Thông tin chuyến -->
+                            <div class="flex-grow-1 ms-3">
+                                <h5 class="mb-0" style="margin:0 8px 0 0;">@trip.BusName</h5>
+                                <div class="text-muted" style="margin:10px 0 20px 0; font-size: 14px;">Limousine @availableSeats chỗ</div>
+
+                                <div class="d-flex">
+                                    <div class="icon-column me-3">
+                                        <i class="bi bi-clock-fill fs-5 text-primary"></i>
+                                        @foreach (var _ in Enumerable.Range(0, 6))
+                                        {
+                                            <span class="dot my-1"></span>
+                                        }
+                                        <i class="bi bi-geo-alt-fill fs-5 text-danger mt-1"></i>
+                                    </div>
+
+                                    <div class="d-flex flex-column">
+                                        <div class="fw-bold mb-1" style="font-size: 20px">
+                                            @trip.DepartureTime.ToString("HH:mm") - @trip.Route?.DepartureCity?.CityName
+                                        </div>
+                                        <div class="text-muted mb-1">
+                                            @((trip.ArrivalTime - trip.DepartureTime).TotalHours.ToString("0")) giờ
+                                        </div>
+                                        <div class="fw-bold" style="font-size: 20px">
+                                            @trip.ArrivalTime.ToString("HH:mm") - @trip.Route?.DestinationCity?.CityName
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Giá & Đặt vé -->
+                            <div class="text-end ms-3">
+                                <h5 class="mb-2" style="padding-bottom: 50px;">@trip.Price.ToString("N0")đ</h5>
+                                <div class="mb-2 text-success">Còn @availableSeats chỗ trống</div>
+                                <a href="/Tickets/Book/@trip.TripId" class="btn btn-warning btn-lg rounded-3">Đặt vé</a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script lọc live & cập nhật tổng chuyến -->
+<script>
+    const filters = document.querySelectorAll(".filter");
+    const tripCards = document.querySelectorAll(".trip-card");
+    const tripCount = document.getElementById("tripCount");
+
+    function applyFilters() {
+        const discountChecked = document.getElementById("discountOnly").checked;
+        const selectedHour = document.querySelector('[data-filter="hour"]').value;
+        const selectedPrice = document.querySelector('[data-filter="price"]').value;
+        const selectedBus = document.querySelector('[data-filter="busCompany"]').value;
+
+        let visibleCount = 0;
+
+        tripCards.forEach(card => {
+            let hour = parseInt(card.dataset.hour);
+            let price = parseInt(card.dataset.price);
+            let bus = card.dataset.bus;
+            let discount = parseInt(card.dataset.discount || 0);
+
+            let discountMatch = !discountChecked || discount > 0;
+
+            let hourMatch = true;
+            if(selectedHour){
+                let parts = selectedHour.split("-");
+                hourMatch = hour >= parseInt(parts[0]) && hour < parseInt(parts[1]);
+            }
+
+            let priceMatch = true;
+            if(selectedPrice){
+                let parts = selectedPrice.split("-");
+                priceMatch = price >= parseInt(parts[0]) && price <= parseInt(parts[1]);
+            }
+
+            let busMatch = true;
+            if(selectedBus){
+                busMatch = bus === selectedBus;
+            }
+
+            let show = discountMatch && hourMatch && priceMatch && busMatch;
+            card.style.display = show ? "flex" : "none";
+
+            if(show) visibleCount++;
+        });
+
+        tripCount.innerText = `Danh sách chuyến xe (${visibleCount} chuyến)`;
+    }
+
+    filters.forEach(f => f.addEventListener("change", applyFilters));
+
+    document.getElementById("resetFilter").addEventListener("click", () => {
+        filters.forEach(f => {
+            if(f.type === "checkbox") f.checked = false;
+            else f.value = "";
+        });
+        applyFilters();
+    });
+
+    // Chạy lọc lần đầu
+    applyFilters();
+</script>
+
+
+<style>
+    .card-title {
+        font-weight: 600;
+        color: #1e3c72;
+    }
+
+    .bi-arrow-right-short {
+        font-size: 1.2rem;
+        color: #1e3c72;
+        vertical-align: middle;
+    }
+
+    .text-danger {
+        font-weight: 600;
+    }
+
+    .btn-warning {
+        padding: 10px 24px;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .dot {
+        display: block;
+        width: 2px;
+        height: 2px;
+        background-color: #888;
+        border-radius: 50%;
+        margin: 4px auto; /* căn giữa theo cột */
+    }
+
+    .trip-card {
+        width: 100%;
+    }
+</style>

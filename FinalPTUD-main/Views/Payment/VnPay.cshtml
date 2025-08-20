@@ -1,0 +1,14 @@
+﻿@model BusTicketBooking.Models.Ticket
+@{
+    ViewData["Title"] = "Thanh toán VNPAY";
+}
+
+<h3>Thanh toán online VNPAY cho vé: @Model.Code</h3>
+<p>
+    Chuyến: @Model.Trip!.Route!.DepartureCity?.CityName → @Model.Trip!.Route!.DestinationCity?.CityName <br />
+    Xe: @Model.Trip!.BusName <br />
+    Ghế: @Model.SeatNumber <br />
+    Giá: @Model.Price.ToString("n0") đ
+</p>
+
+<p>Bạn sẽ được chuyển sang cổng thanh toán VNPAY...</p>

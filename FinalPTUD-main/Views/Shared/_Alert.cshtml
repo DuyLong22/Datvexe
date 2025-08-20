@@ -1,0 +1,40 @@
+﻿@{
+    var message = TempData["Alert"] as string;
+    var type = TempData["AlertType"] as string ?? "info"; // mặc định info
+    string alertClass = type switch
+    {
+        "success" => "alert-success",
+        "error" => "alert-danger",
+        "warning" => "alert-warning",
+        _ => "alert-info"
+    };
+
+    string iconHtml = type switch
+    {
+        "success" => "<i class='bi bi-check-circle-fill me-2'></i>",
+        "error" => "<i class='bi bi-x-circle-fill me-2'></i>",
+        "warning" => "<i class='bi bi-exclamation-triangle-fill me-2'></i>",
+        _ => "<i class='bi bi-info-circle-fill me-2'></i>"
+    };
+}
+
+@if (!string.IsNullOrEmpty(message))
+{
+    <div id="ticketAlert" class="alert  alert-warning alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index:1050;">
+        @Html.Raw(iconHtml)<span id="ticketAlertMessage">@message</span>
+        <button type="button" class="btn-close" onclick="hideTicketAlert()"></button>
+    </div>
+
+    <script>
+        function hideTicketAlert() {
+            var alert = document.getElementById('ticketAlert');
+            if (alert) {
+                var bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }
+
+        // Tự ẩn sau 5 giây
+        setTimeout(hideTicketAlert, 5000);
+    </script>
+}

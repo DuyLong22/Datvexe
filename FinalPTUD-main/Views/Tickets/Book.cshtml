@@ -1,0 +1,371 @@
+@model BusTicketBooking.Models.Trip
+@{
+    ViewData["Title"] = "Đặt vé";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="seatAlert" class="alert alert-warning alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index:1050; display:none;">
+    <span id="seatAlertMessage"></span>
+    <button type="button" class="btn-close" onclick="hideSeatAlert()"></button>
+</div>
+
+<h3>Đặt vé: @Model.BusName (@Model.Route!.DepartureCity?.CityName → @Model.Route!.DestinationCity?.CityName)</h3>
+<p>Khởi hành: @Model.DepartureTime.ToString("HH:mm dd/MM/yyyy") - Giá: @Model.Price.ToString("n0") đ</p>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<style>
+    .seat-layout {
+        display: flex;
+        gap: 40px;
+        align-items: stretch; /* Bên trái và phải cao bằng nhau */
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .seat-left {
+        flex: 2;
+        display: flex;
+        gap: 20px;
+    }
+
+    .seat-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border: 2px solid #eee;
+        border-radius: 10px;
+        padding: 15px;
+        background: #f9f9f9;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .bus-container {
+        display: flex;
+        justify-content: center;
+        gap: 80px; /* khoảng cách giữa 2 dãy ghế */
+        margin-bottom: 20px;
+    }
+
+    .seat-column {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .seat {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        user-select: none;
+        transition: background-color 0.2s;
+    }
+
+        .seat.available {
+            background-color: #DFF3FF;
+        }
+
+        .seat.selected {
+            background-color: #FDEDE8;
+        }
+
+        .seat.booked {
+            background-color: #D5D9DD;
+            cursor: not-allowed;
+        }
+
+    .submit-button {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .btn-success {
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+
+    .info-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .card {
+        border: 2px solid #eee;
+        border-radius: 10px;
+        padding: 15px 20px;
+        background: #f9f9f9;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+</style>
+<div class="seat-layout">
+    <div class="seat-left">
+      <div class="seat-container" style="display:flex; flex-direction:row; gap:20px; padding:15px; border:2px solid #eee; border-radius:10px; background:#f9f9f9; align-items:flex-start;">
+    <!-- Ghế + form -->
+    <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
+        <div class="bus-container" id="seatGrid" style="min-width:300px; min-height:200px;"></div>
+        <form method="post" id="bookingForm" class="submit-button" asp-controller="Tickets" asp-action="Book">
+            <input type="hidden" name="seatNumbers" id="seatNumbers" />
+            <button type="submit" class="btn btn-success" id="submitButton" disabled>Xác nhận đặt</button>
+        </form>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend" style="display:flex; flex-direction:column; gap:10px; min-width:100px;">
+        <div style="display:flex; align-items:center; gap:6px;">
+            <div class="seat booked" style="width:28px; height:28px;"></div> <span>Đã bán</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+            <div class="seat available" style="width:28px; height:28px;"></div> <span>Còn trống</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+            <div class="seat selected" style="width:28px; height:28px;"></div> <span>Đang chọn</span>
+        </div>
+    </div>
+</div>
+
+
+    </div>
+
+    <!-- Bên phải: thông tin chuyến đi + chi tiết giá -->
+    <div class="info-area">
+        <div class="card">
+            <h4>Thông tin lượt đi</h4>
+            <p><b>Tuyến xe:</b> @Model.Route.DepartureCity.CityName - @Model.Route.DestinationCity.CityName</p>
+            <p><b>Thời gian xuất bến:</b> @Model.DepartureTime.ToString("HH:mm dd/MM/yyyy")</p>
+            <p><b>Số lượng ghế:</b> <span id="seatCount">0</span> Ghế</p>
+            <p><b>Số ghế:</b> <span id="seatList">-</span></p>
+            <p><b>Tổng tiền lượt đi:</b> <span id="totalPriceTop">0</span>đ</p>
+        </div>
+
+        <div class="card">
+            <h4>Chi tiết giá <span style="color:orange;">&#9432;</span></h4>
+            <p><b>Giá vé lượt đi:</b> <span id="totalPriceDetail">0</span>đ</p>
+            <p><b>Phí thanh toán:</b> 0đ</p>
+            <hr>
+            <p><b>Tổng tiền:</b> <span id="totalPriceBottom">0</span>đ</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedSeats = [];
+
+                      async function loadBookedSeats() {
+            try {
+                const response = await fetch(`/Tickets/GetBookedSeats?tripId=@Model.TripId&ts=${Date.now()}`, {
+                    cache: "no-store"
+                });
+                const seats = await response.json();
+                console.log("🔄 Seats from API:", seats);
+                renderSeatGrid(seats);
+            } catch (error) {
+                console.error('❌ Lỗi khi lấy ghế đã đặt:', error);
+            }
+        }
+
+                function renderSeatGrid(bookedSeats) {
+            const seatGrid = document.getElementById('seatGrid');
+            seatGrid.innerHTML = "";
+
+            const leftCol = document.createElement('div');
+            leftCol.classList.add('seat-column');
+
+            const rightCol = document.createElement('div');
+            rightCol.classList.add('seat-column');
+
+        // ========== DÃY TRÁI ==========
+        // ====== Thêm chữ "Tầng Trên" căn giữa ======
+        let upperLabel = document.createElement('div');
+        upperLabel.innerText = "Tầng Trên";
+        upperLabel.style.textAlign = "center";
+        upperLabel.style.fontSize = "16px";
+        upperLabel.style.fontWeight = "bold";
+        upperLabel.style.margin = "10px 0";
+        leftCol.appendChild(upperLabel);
+
+        // ====== Hàng đầu có 2 ghế (1-2) với khoảng trống ở giữa ======
+        let seatNum = 1;
+        let row = document.createElement('div');
+        row.style.display = "flex";
+        row.style.justifyContent = "space-between"; // căn đều 2 bên
+
+        // ghế 1 bên trái
+        row.appendChild(createSeat(seatNum++, bookedSeats));
+
+        // khoảng trống giữa
+        let space = document.createElement('div');
+        space.style.width = "40px";
+        row.appendChild(space);
+
+        // ghế 2 bên phải
+        row.appendChild(createSeat(seatNum++, bookedSeats));
+
+        leftCol.appendChild(row);
+
+        // ====== Các hàng tiếp theo: mỗi hàng 3 ghế, cho tới khi đủ 17 ghế ======
+        while (seatNum <= 17) {
+            row = document.createElement('div');
+            row.style.display = "flex";
+            row.style.gap = "40px";
+            for (let i = 0; i < 3 && seatNum <= 17; i++) {
+                row.appendChild(createSeat(seatNum++, bookedSeats));
+            }
+            leftCol.appendChild(row);
+        }
+
+        // ========== DÃY PHẢI ==========
+        // ====== Thêm chữ "Tầng Dưới" căn giữa ======
+        let lowerLabel = document.createElement('div'); // Đổi tên biến khác
+        lowerLabel.innerText = "Tầng Dưới";
+        lowerLabel.style.textAlign = "center";
+        lowerLabel.style.fontSize = "16px";
+        lowerLabel.style.fontWeight = "bold";
+        lowerLabel.style.margin = "10px 0";
+        rightCol.appendChild(lowerLabel);
+
+        // Hàng đầu bên phải có 2 ghế (18-19) với khoảng trống giữa
+        seatNum = 18;
+        row = document.createElement('div');
+        row.style.display = "flex";
+        row.style.justifyContent = "space-between";
+
+        // ghế 18 bên trái
+        row.appendChild(createSeat(seatNum++, bookedSeats));
+
+        // khoảng trống giữa
+        let spaceRight = document.createElement('div');
+        spaceRight.style.width = "40px";
+        row.appendChild(spaceRight);
+
+        // ghế 19 bên phải
+        row.appendChild(createSeat(seatNum++, bookedSeats));
+
+        rightCol.appendChild(row);
+
+        // Các hàng tiếp theo: mỗi hàng 3 ghế, cho tới khi đủ 34 ghế
+        while (seatNum <= 34) {
+            row = document.createElement('div');
+            row.style.display = "flex";
+            row.style.gap = "40px";
+            for (let i = 0; i < 3 && seatNum <= 34; i++) {
+                row.appendChild(createSeat(seatNum++, bookedSeats));
+            }
+            rightCol.appendChild(row);
+        }
+            seatGrid.appendChild(leftCol);
+            seatGrid.appendChild(rightCol);
+        }
+
+        function showSeatAlert(message) {
+    const alertDiv = document.getElementById('seatAlert');
+    document.getElementById('seatAlertMessage').textContent = message;
+    alertDiv.style.display = 'block';
+    
+    setTimeout(() => {
+        hideSeatAlert();
+    }, 3000);
+}
+
+function hideSeatAlert() {
+    const alertDiv = document.getElementById('seatAlert');
+    alertDiv.style.display = 'none';
+}
+
+               function createSeat(seatNumber, seats) {
+            const seat = document.createElement('div');
+            seat.classList.add('seat');
+            seat.textContent = seatNumber;
+            seat.dataset.seatNumber = seatNumber;
+
+            // tìm trạng thái ghế từ API
+            const seatInfo = seats.find(s => s.seatNumber === seatNumber);
+            const status = seatInfo ? seatInfo.status : "available";
+                   console.log(`Seat ${seatNumber}:`, status);
+
+                    if (status === "Confirmed" || status === "Pending") {
+                // booked & pending chung 1 màu
+                seat.classList.add('booked');
+                seat.style.cursor = "not-allowed";
+            } else {
+                seat.classList.add('available');
+                seat.addEventListener('click', () => {
+                    if (seat.classList.contains('selected')) {
+                        seat.classList.remove('selected');
+                        seat.classList.add('available');
+                        selectedSeats = selectedSeats.filter(n => n !== seatNumber);
+                    } else {
+                        if (selectedSeats.length >= 5) {
+                            showSeatAlert("Bạn chỉ được chọn tối đa 5 ghế!");
+                            return;
+                        }
+                        seat.classList.remove('available');
+                        seat.classList.add('selected');
+                        selectedSeats.push(seatNumber);
+                    }
+                    updateHiddenInputs();
+                    document.getElementById('submitButton').disabled = selectedSeats.length === 0;
+                });
+            }
+
+            return seat;
+        }
+
+
+           function updateHiddenInputs() {
+            const form = document.getElementById('bookingForm');
+            form.querySelectorAll('input[name="seatNumbers"]').forEach(el => el.remove());
+            selectedSeats.forEach(seatNumber => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'seatNumbers';
+                input.value = seatNumber;
+                form.appendChild(input);
+            });
+
+            // === Cập nhật thông tin bên phải ===
+            document.getElementById('seatCount').textContent = selectedSeats.length;
+            document.getElementById('seatList').textContent = selectedSeats.length > 0 ? selectedSeats.join(", ") : "-";
+
+            let pricePerSeat = @Model.Price; // giá vé 1 ghế
+            let total = selectedSeats.length * pricePerSeat;
+
+            // cập nhật tổng tiền lượt đi (card 1)
+            document.getElementById('totalPriceTop').textContent = total.toLocaleString();
+
+            // cập nhật giá vé lượt đi (card 2) = giống tổng tiền
+            document.getElementById('totalPriceDetail').textContent = total.toLocaleString();
+
+            // cập nhật tổng tiền (card 2)
+            document.getElementById('totalPriceBottom').textContent = total.toLocaleString();
+        }
+                // Khi load lần đầu
+        document.addEventListener("DOMContentLoaded", () => {
+            console.log("DOMContentLoaded -> loadBookedSeats()");
+            loadBookedSeats();
+        });
+
+        // Khi quay lại bằng nút Back/Forward
+        window.addEventListener("pageshow", function (event) {
+            console.log("pageshow event fired. persisted =", event.persisted);
+
+            // Luôn gọi lại để chắc chắn
+            loadBookedSeats();
+        });
+
+    </script>
+}

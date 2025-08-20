@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<h3>Dashboard</h3>
+<div class="row text-center mb-4">
+    <div class="col-md-3"><div class="p-3 bg-light rounded shadow-sm">Chuyến xe: <strong>@ViewBag.TotalTrips</strong></div></div>
+    <div class="col-md-3"><div class="p-3 bg-light rounded shadow-sm">Vé: <strong>@ViewBag.TotalTickets</strong></div></div>
+    <div class="col-md-3"><div class="p-3 bg-light rounded shadow-sm">Người dùng: <strong>@ViewBag.TotalUsers</strong></div></div>
+    <div class="col-md-3"><div class="p-3 bg-light rounded shadow-sm">Doanh thu: <strong>@(((decimal)ViewBag.Revenue).ToString("n0")) đ</strong></div></div>
+</div>
+<canvas id="chart"></canvas>
+@section Scripts {
+<script>
+fetch('/Dashboard/RevenueData')
+  .then(r => r.json())
+  .then(rows => {
+     const labels = rows.map(x => 'Th ' + x.month);
+     const data = rows.map(x => x.revenue);
+     const ctx = document.getElementById('chart');
+     new Chart(ctx, { type: 'bar', data: { labels, datasets: [{ label: 'Doanh thu theo tháng', data }] } });
+  });
+</script>
+}

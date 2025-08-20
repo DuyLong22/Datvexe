@@ -1,0 +1,256 @@
+﻿@model BusTicketBooking.Models.Ticket
+@{
+    ViewData["Title"] = "Thanh toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Cột trái: Phương thức thanh toán -->
+        <div class="col-md-3">
+            <h5 class="mb-3" style="font-weight: bold;">Chọn phương thức thanh toán</h5>
+            <form method="post" asp-action="PayConfirm" id="paymentForm">
+                <input type="hidden" name="ticketId" value="@Model.TicketId" />
+
+                <style>
+                    .payment-option {
+                        padding: 14px 18px;
+                        font-size: 1.1rem;
+                        border: 1px solid rgba(255, 255, 255, 0.2);
+                        border-radius: 12px;
+                        margin-bottom: 12px;
+                        cursor: pointer;
+                        transition: all 0.3s ease-in-out;
+                        background: rgba(255, 255, 255, 0.05); /* trong suốt nhẹ */
+                        backdrop-filter: blur(10px); /* làm mờ nền phía sau */
+                        -webkit-backdrop-filter: blur(10px); /* Safari */
+                        color: #f8f9fa;
+                    }
+
+                        .payment-option:hover {
+                            background: rgba(255, 255, 255, 0.12);
+                            border-color: rgba(13, 110, 253, 0.5);
+                        }
+
+                        .payment-option input[type="radio"] {
+                            transform: scale(1.3);
+                            margin-right: 12px;
+                            accent-color: #0d6efd; /* radio xanh */
+                        }
+
+                        .payment-option img {
+                            width: 50px;
+                            height: 50px;
+                            object-fit: contain;
+                            margin-right: 12px;
+                        }
+
+                        .payment-option span {
+                            color: #000; 
+                            font-weight: bold;
+                            font-size: 16px;
+                        }
+
+                </style>
+
+                <div class="list-group">
+                    <label class="list-group-item d-flex align-items-center payment-option">
+                        <input type="radio" class="form-check-input" name="paymentMethod" value="ZaloPay" />
+                        <img src="~/images/zalo.webp" alt="ZaloPay" />
+                        <span>ZaloPay</span>
+                    </label>
+
+                    <label class="list-group-item d-flex align-items-center payment-option">
+                        <input type="radio" class="form-check-input" name="paymentMethod" value="VNPay" />
+                        <img src="~/images/logovn.jpg" alt="VNPAY" />
+                        <span>VNPAY</span>
+                    </label>
+
+                    <label class="list-group-item d-flex align-items-center payment-option">
+                        <input type="radio" class="form-check-input" name="paymentMethod" value="ShopeePay" />
+                        <img src="~/images/shopee.webp" alt="ShopeePay" />
+                        <span>ShopeePay</span>
+                    </label>
+
+                    <label class="list-group-item d-flex align-items-center payment-option">
+                        <input type="radio" class="form-check-input" name="paymentMethod" value="MoMo" />
+                        <img src="~/images/logomomo.webp" alt="MoMo" />
+                        <span>MoMo</span>
+                    </label>
+
+                    <label class="list-group-item d-flex align-items-center payment-option">
+                        <input type="radio" class="form-check-input" name="paymentMethod" value="Vietcombank" checked />
+                        <img src="~/images/logovcb.jpg" alt="Vietcombank" />
+                        <span>Vietcombank</span>
+                    </label>
+
+                    <label class="list-group-item d-flex align-items-center payment-option">
+                        <input type="radio" class="form-check-input" name="paymentMethod" value="Cash" />
+                        <img src="~/images/cash.jpg" alt="Cash" />
+                        <span>Thanh Toán Tiền Mặt</span>
+                    </label>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Cột Giữa: QR code -->
+        <div class="col-md-5 text-center">
+            <h2 style="font-size: 16px; color: #111111">Tổng Thanh Toán</h2>
+            <h3 class="text-danger fw-bold" style="font-size: 48px">@Model.Price.ToString("n0") đ</h3>
+
+            <div class="card mb-3 p-3 text-center d-inline-block" id="qrSection">
+                <img id="qrImage" src="~/images/vietcombank.jpg" alt="QR Code" width="320" class="mx-auto d-block my-3" />
+                <ol class="steps justify-content-center">
+                    <li>Dùng biểu tượng <strong>📷</strong> để quét mã QR</li>
+                    <li>Quét mã ở trang này và thanh toán</li>
+                </ol>
+                <style>
+                    .steps {
+                        list-style: none;
+                        counter-reset: step;
+                        padding-left: 0;
+                        margin: 20px auto;
+                        display: inline-block; /* để căn giữa */
+                        text-align: left; /* chữ thẳng hàng đẹp */
+                    }
+
+                        .steps li {
+                            counter-increment: step;
+                            margin-bottom: 8px;
+                            display: flex;
+                            align-items: center;
+                            font-size: 14px;
+                        }
+
+                            .steps li::before {
+                                content: counter(step);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                width: 24px;
+                                height: 24px;
+                                border-radius: 50%;
+                                background-color: #6c757d;
+                                color: #fff;
+                                font-size: 12px;
+                                font-weight: bold;
+                                margin-right: 8px;
+                            }
+                </style>
+                <form method="post" asp-action="PayConfirm">
+                    <input type="hidden" name="ticketId" value="@Model.TicketId" />
+                    <input type="hidden" name="paymentMethod" id="paymentMethodHidden" />
+                    <button type="submit" class="btn btn-success">Tôi đã thanh toán</button>
+                </form>
+            </div>
+        </div>
+
+            <!-- Cột Phải: Thông tin-->
+        <div class="col-md-4">
+            <div class="card mb-3 p-3 w-100">
+                <h6 style="font-size: 20px; font-weight: bold; margin-bottom: 20px;">Thông tin hành khách</h6>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Họ và tên:</span>
+                    <span style="font-weight: 600">@Model.User.Name</span>
+                </div>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Số điện thoại:</span>
+                    <span style="font-weight: 600">@Model.User.Phone</span>
+                </div>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Email:</span>
+                    <span style="font-weight: 600">@Model.User.Email</span>
+                </div>
+            </div>
+
+            <div class="card mb-3 p-3 w-100">
+                <h6 style="font-size: 20px; font-weight: bold; margin-bottom: 20px;">Thông tin lượt đi</h6>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Tuyến xe:</span>
+                    <span style="font-weight: 600">@Model.Trip!.Route!.DepartureCity?.CityName → @Model.Trip!.Route!.DestinationCity?.CityName</span>
+                </div>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Thời gian xuất bến:</span>
+                    <span style="font-weight: 600; color: #28a745">@Model.Trip!.DepartureTime.ToString("HH:mm dd/MM/yyyy")</span>
+                </div>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Số lượng ghế:</span>
+                    <span style="font-weight: 600">1 Ghế</span>
+                </div>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Số ghế:</span>
+                    <span style="font-weight: 600">@Model.SeatNumber</span>
+                </div>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Điểm lên xe:</span>
+                    <span style="font-weight: 600">@Model.Trip!.Route!.DepartureCity?.CityName</span>
+                </div>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Điểm trả khách:</span>
+                    <span style="font-weight: 600">@Model.Trip!.Route!.DestinationCity?.CityName</span>
+                </div>
+                <div class="info-row d-flex justify-content-between fw-bold">
+                    <span>Tổng tiền lượt đi:</span>
+                    <span class="text-danger">@Model.Price.ToString("n0") đ</span>
+                </div>
+            </div>
+
+            <div class="card mb-3 p-3 w-100">
+                <h6 style="font-size: 20px; font-weight: bold; margin-bottom: 20px;">Chi tiết giá</h6>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Giá vé lượt đi:</span>
+                    <span style="font-weight: bold" class="text-danger">@Model.Price.ToString("n0") đ</span>
+                </div>
+                <div class="info-row d-flex justify-content-between">
+                    <span>Phí thanh toán:</span>
+                    <span>0 đ</span>
+                </div>
+                <div class="info-row d-flex justify-content-between fw-bold">
+                    <span>Tổng tiền:</span>
+                    <span class="text-danger">@Model.Price.ToString("n0") đ</span>
+                </div>
+            </div>
+
+            <style>
+            .info-row {
+                padding: 5px 0;              /* khoảng cách dọc giữa các dòng */
+            }
+            </style>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        const radios = document.querySelectorAll('input[name="paymentMethod"]');
+        const qrImage = document.getElementById("qrImage");
+        const qrSection = document.getElementById("qrSection");
+         const methodHidden = document.getElementById("paymentMethodHidden");
+
+        const qrMap = {
+            "ZaloPay": "/images/zalopay.jpg",
+            "ShopeePay": "/images/shopeepay.jpg",
+            "MoMo": "/images/momo.jpg",
+            "Vietcombank": "/images/vietcombank.jpg"
+        };
+
+        radios.forEach(radio => {
+            radio.addEventListener("change", function () {
+                const ticketId = document.querySelector('input[name="ticketId"]').value;
+
+                if (this.value === "VNPay") {
+                    // VNPay: chuyển hướng sang cổng thanh toán
+                    window.location.href = `/Payment/VnPay?ticketId=${ticketId}`;
+                } else if (this.value === "Cash") {
+                    // Tiền mặt: chuyển về trang "Vé của tôi"
+                    window.location.href = `/Tickets/MyTickets`;
+                } else {
+                    // Các phương thức ví điện tử: đổi QR code
+                    qrImage.src = qrMap[this.value];
+                    qrSection.style.display = "block";
+                    methodHidden.value = this.value;
+                }
+            });
+        });
+    </script>
+}
