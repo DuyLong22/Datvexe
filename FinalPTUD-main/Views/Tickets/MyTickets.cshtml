@@ -1,4 +1,4 @@
-@model IEnumerable<BusTicketBooking.Models.TicketGroupViewModel>
+@model IEnumerable<BusTicketBooking.Models.Ticket>
 
 @{
     ViewData["Title"] = "Vé của tôi";
@@ -29,38 +29,39 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var v in Model)
+                @foreach (var ticket in Model)
                 {
                     <tr>
-                        <td><strong>@v.Code</strong></td>
+                        <td><strong>@ticket.Code</strong></td>
                         <td>
-                            @v.Trip!.Route!.DepartureCity?.CityName →
-                            @v.Trip!.Route!.DestinationCity?.CityName <br />
-                            <small class="text-muted">@v.Trip!.BusName</small>
+                            @ticket.Trip!.Route!.DepartureCity?.CityName →
+                            @ticket.Trip!.Route!.DestinationCity?.CityName <br />
+                            <small class="text-muted">@ticket.Trip!.BusName</small>
                         </td>
-                        <td>@string.Join(", ", v.SeatNumber)</td>
-                        <td>@v.BookingDate.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td>@v.Trip!.DepartureTime.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td><strong>@(v.Price* v.SeatNumber.Count).ToString("N0")đ</strong></td>
+                        <td>@string.Join(", ", ticket.SeatNumber.Select(s => s.SeatNumber))</td>
+                        <td>@ticket.BookingDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@ticket.Trip!.DepartureTime.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><strong>@string.Format("{0:N0} đ", ticket.Price * ticket.SeatNumber.Count)</strong></td>
+
                         <td>
-                            @if (v.Status == "Confirmed")
+                            @if (ticket.Status == "Confirmed")
                             {
                                 <span class="badge bg-success">Đã xác nhận</span>
                             }
-                            else if (v.Status == "Pending")
+                            else if (ticket.Status == "Pending")
                             {
                                 <span class="badge bg-warning text-dark">Chờ thanh toán</span>
                             }
-                            else if (v.Status == "Cancelled")
+                            else if (ticket.Status == "Cancelled")
                             {
                                 <span class="badge bg-danger">Đã hủy</span>
                             }
                         </td>
                         <td>
-                            @if (v.Status == "Pending")
+                            @if (ticket.Status == "Pending")
                             {
-                                <form asp-controller="Tickets" asp-action="Pay" method="post">
-                                    <input type="hidden" name="ticketId" value="@v.TicketId" />
+                                <form asp-controller="Tickets" asp-action="PayConfirm" method="post">
+                                    <input type="hidden" name="ticketId" value="@ticket.TicketId" />
                                     <button type="submit" class="btn btn-sm btn-primary">
                                         <i class="bi bi-credit-card"></i> Thanh toán
                                     </button>

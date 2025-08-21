@@ -56,16 +56,14 @@ namespace BusTicketBooking.Controllers
             var seats = _db.Tickets
                 .Where(t => t.TripId == tripId &&
                        (t.Status == "Confirmed" || (t.Status == "Pending" && t.ExpireAt > now)))
-                .Select(t => new {
-                    SeatNumber = t.SeatNumber,
-                    Status = t.Status,
-                    ExpireAt = t.ExpireAt
-                })
+                .SelectMany(t => t.SeatNumber.Select(s => new {
+                    SeatNumber = s.SeatNumber,  // số ghế
+                    Status = t.Status           // trạng thái Pending / Confirmed
+                }))
                 .ToList();
 
             return Json(seats);
         }
-
 
         // POST: Đặt vé
         [HttpPost]
@@ -93,8 +91,6 @@ namespace BusTicketBooking.Controllers
                 .Where(s => seatNumbers.Contains(s))
                 .ToList();
 
-
-
             if (takenSeats.Any())
             {
                 TempData["Alert"] = $"Ghế {string.Join(", ", takenSeats)} đã được đặt. Vui lòng chọn ghế khác.";
@@ -103,62 +99,51 @@ namespace BusTicketBooking.Controllers
 
             string ticketCode = GenerateTicketCode();
 
-            var tickets = seatNumbers.Select(seatNumber => new Ticket
+            // --- Chỉnh sửa: tạo 1 Ticket duy nhất cho tất cả ghế ---
+            var ticket = new Ticket
             {
                 TripId = id,
                 UserId = userId,
-                Price = trip.Price,
+                Price = trip.Price, // giá 1 ghế
                 Status = TicketStatus.Pending.ToString(),
                 BookingDate = DateTime.Now,
-                ExpireAt = DateTime.Now.AddMinutes(10), // giữ tối đa 10 phút
+                ExpireAt = DateTime.Now.AddMinutes(10),
                 Code = ticketCode,
-                SeatNumber = new List<TicketSeat>
-                {
-                    new TicketSeat { SeatNumber = seatNumber }
-                }
-            }).ToList();
+                SeatNumber = seatNumbers.Select(s => new TicketSeat { SeatNumber = s }).ToList()
+            };
 
-            _db.Tickets.AddRange(tickets);
+            _db.Tickets.Add(ticket);
             _db.SaveChanges();
-
             transaction.Commit();
 
-            var ticketIdsQuery = string.Join(",", tickets.Select(t => t.TicketId));
-
-            if (tickets.Count == 1)
-            {
-                return RedirectToAction("Pay", new { ticketId = tickets[0].TicketId });
-            }
-            else
-            {
-                return Redirect($"/Tickets/PayMultiple?ticketIds={ticketIdsQuery}");
-            }
+            // Redirect thẳng sang trang thanh toán 1 Ticket duy nhất
+            return RedirectToAction("Pay", new { ticketId = ticket.TicketId });
         }
 
         // GET: Thanh toán nhiều vé
-        [HttpGet]
-        public IActionResult PayMultiple([FromQuery] string ticketIds)
-        {
-            if (string.IsNullOrEmpty(ticketIds)) return NotFound();
+        //[HttpGet]
+        //public IActionResult PayMultiple([FromQuery] string ticketIds)
+        //{
+          //  if (string.IsNullOrEmpty(ticketIds)) return NotFound();
 
-            var ids = ticketIds.Split(',').Select(int.Parse).ToList();
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            int userId = int.Parse(userIdClaim);
+            //var ids = ticketIds.Split(',').Select(int.Parse).ToList();
+            //var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            //int userId = int.Parse(userIdClaim);
 
-            var tickets = _db.Tickets
-                .Where(t => ids.Contains(t.TicketId) && t.UserId == userId)
-                .Include(t => t.Trip)
-                    .ThenInclude(tr => tr.Route)
-                        .ThenInclude(r => r.DepartureCity)
-                .Include(t => t.Trip)
-                    .ThenInclude(tr => tr.Route)
-                        .ThenInclude(r => r.DestinationCity)
-                .Include(t => t.User)
-                .ToList();
+            //var tickets = _db.Tickets
+                //.Where(t => ids.Contains(t.TicketId) && t.UserId == userId)
+                //.Include(t => t.Trip)
+                  //  .ThenInclude(tr => tr.Route)
+                    //    .ThenInclude(r => r.DepartureCity)
+                //.Include(t => t.Trip)
+                  //  .ThenInclude(tr => tr.Route)
+                    //    .ThenInclude(r => r.DestinationCity)
+                //.Include(t => t.User)
+                //.ToList();
 
-            if (!tickets.Any()) return Unauthorized(); // user không sở hữu vé
-            return View(tickets);
-        }
+            //if (!tickets.Any()) return Unauthorized(); // user không sở hữu vé
+            //return View(tickets);
+        //}
 
         [HttpPost]
         public IActionResult PayMultipleConfirm(string ticketIds, string paymentMethod)
@@ -205,6 +190,7 @@ namespace BusTicketBooking.Controllers
                 .Include(t => t.Trip)
                     .ThenInclude(tr => tr.Route)
                         .ThenInclude(r => r.DestinationCity)
+                .Include(t => t.SeatNumber)
                 .FirstOrDefault(t => t.TicketId == ticketId && t.UserId == userId);
 
             if (ticket == null) return Unauthorized();
@@ -218,13 +204,15 @@ namespace BusTicketBooking.Controllers
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             int userId = int.Parse(userIdClaim);
 
-            var ticket = _db.Tickets.FirstOrDefault(t => t.TicketId == ticketId && t.UserId == userId);
+            var ticket = _db.Tickets
+                .Include(t => t.SeatNumber)
+                .FirstOrDefault(t => t.TicketId == ticketId && t.UserId == userId);
             if (ticket == null) return Unauthorized();
 
             var payment = new Payment
             {
                 TicketId = ticket.TicketId,
-                Amount = ticket.Price,
+                Amount = ticket.Price * ticket.SeatNumber.Count, // tính tổng tiền tất cả ghế
                 PaymentMethod = string.IsNullOrEmpty(paymentMethod) ? "Cash" : paymentMethod,
                 PaymentDate = DateTime.Now
             };
@@ -246,6 +234,22 @@ namespace BusTicketBooking.Controllers
             return RedirectToAction(nameof(MyTickets));
         }
 
+        [HttpGet]
+        public IActionResult CancelPending(int ticketId)
+        {
+            // Tìm vé đang pending
+            var ticket = _db.Tickets.FirstOrDefault(t => t.TicketId == ticketId);
+            if (ticket != null && ticket.Status == "Pending")
+            {
+                // Hủy vé pending -> xóa hoặc set trạng thái trống
+                _db.Tickets.Remove(ticket);
+                _db.SaveChanges();
+            }
+
+            // Quay lại Index trong Areas/User/Controllers/TripsController.cs
+            return RedirectToAction("Index", "Trips", new { area = "User" });
+        }
+
         // GET: Vé của user
         public IActionResult MyTickets()
         {
@@ -261,28 +265,12 @@ namespace BusTicketBooking.Controllers
                 .Include(t => t.Trip)
                     .ThenInclude(tr => tr.Route)
                         .ThenInclude(r => r.DestinationCity)
+                .Include(t => t.SeatNumber) // include ghế
                 .OrderByDescending(t => t.BookingDate)
                 .ToList();
 
-            // Gộp vé theo chuyến
-            var grouped = tickets
-    .GroupBy(t => t.TripId)
-    .Select(g => new TicketGroupViewModel
-    {
-        Trip = g.First().Trip!,
-        Code = g.Select(x => x.Code).ToList(),
-        SeatNumber = g.SelectMany(x => x.SeatNumber.Select(s => s.SeatNumber)).ToList(), // ghép tất cả ghế
-        Price = g.Sum(x => x.Price),
-        Status = g.All(x => x.Status == "Confirmed") ? "Confirmed" :
-                 g.All(x => x.Status == "Pending") ? "Pending" : "Mixed",
-        BookingDate = g.Min(x => x.BookingDate)
-    })
-    .OrderByDescending(x => x.BookingDate)
-    .ToList();
-
-            return View(grouped);
+            return View(tickets);
         }
-
 
         // GET: Quản lý vé (Admin)
         [Authorize(Roles = "Admin")]

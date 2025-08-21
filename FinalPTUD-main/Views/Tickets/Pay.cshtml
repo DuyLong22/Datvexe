@@ -3,6 +3,34 @@
     ViewData["Title"] = "Thanh toán";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<!-- Nút quay lại -->
+<a href="javascript:void(0)"
+   class="btn btn-outline-secondary"
+   style="margin-bottom:15px;"
+   data-bs-toggle="modal" data-bs-target="#cancelModal">
+    ⬅ Quay lại
+</a>
+
+<!-- Modal xác nhận -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">Xác nhận hủy vé</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                Bạn có chắc chắn muốn hủy vé này không? Sau khi hủy, ghế sẽ trở về trạng thái <strong>trống</strong>.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <a href="@Url.Action("CancelPending", "Tickets", new { ticketId = Model.TicketId })"
+                   class="btn btn-danger">Xác nhận</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <div class="container mt-4">
     <div class="row">
@@ -97,7 +125,7 @@
         <!-- Cột Giữa: QR code -->
         <div class="col-md-5 text-center">
             <h2 style="font-size: 16px; color: #111111">Tổng Thanh Toán</h2>
-            <h3 class="text-danger fw-bold" style="font-size: 48px">@Model.Price.ToString("n0") đ</h3>
+            <h3 class="text-danger fw-bold" style="font-size: 48px">@((@Model.Price * @Model.SeatNumber.Count).ToString("n0")) đ</h3>
 
             <div class="card mb-3 p-3 text-center d-inline-block" id="qrSection">
                 <img id="qrImage" src="~/images/vietcombank.jpg" alt="QR Code" width="320" class="mx-auto d-block my-3" />
@@ -176,11 +204,11 @@
                 </div>
                 <div class="info-row d-flex justify-content-between">
                     <span>Số lượng ghế:</span>
-                    <span style="font-weight: 600">1 Ghế</span>
+                    <span style="font-weight: 600">@Model.SeatNumber.Count Ghế</span>
                 </div>
                 <div class="info-row d-flex justify-content-between">
                     <span>Số ghế:</span>
-                    <span style="font-weight: 600">@Model.SeatNumber</span>
+                    <span style="font-weight: 600">@string.Join(", ", Model.SeatNumber.Select(s => s.SeatNumber))</span>
                 </div>
                 <div class="info-row d-flex justify-content-between">
                     <span>Điểm lên xe:</span>
@@ -192,7 +220,7 @@
                 </div>
                 <div class="info-row d-flex justify-content-between fw-bold">
                     <span>Tổng tiền lượt đi:</span>
-                    <span class="text-danger">@Model.Price.ToString("n0") đ</span>
+                    <span class="text-danger">@((@Model.Price * @Model.SeatNumber.Count).ToString("n0")) đ</span>
                 </div>
             </div>
 
@@ -200,7 +228,7 @@
                 <h6 style="font-size: 20px; font-weight: bold; margin-bottom: 20px;">Chi tiết giá</h6>
                 <div class="info-row d-flex justify-content-between">
                     <span>Giá vé lượt đi:</span>
-                    <span style="font-weight: bold" class="text-danger">@Model.Price.ToString("n0") đ</span>
+                    <span style="font-weight: bold" class="text-danger">@((@Model.Price* @Model.SeatNumber.Count).ToString("n0")) đ</span>
                 </div>
                 <div class="info-row d-flex justify-content-between">
                     <span>Phí thanh toán:</span>
@@ -208,7 +236,7 @@
                 </div>
                 <div class="info-row d-flex justify-content-between fw-bold">
                     <span>Tổng tiền:</span>
-                    <span class="text-danger">@Model.Price.ToString("n0") đ</span>
+                    <span class="text-danger">@((@Model.Price * @Model.SeatNumber.Count).ToString("n0")) đ</span>
                 </div>
             </div>
 

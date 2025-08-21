@@ -8,15 +8,28 @@
     <span id="seatAlertMessage"></span>
     <button type="button" class="btn-close" onclick="hideSeatAlert()"></button>
 </div>
+<div style="position:relative; align-items:center; margin-bottom:15px;">
+    <!-- Nút quay lại -->
+    <a href="javascript:history.back()" style="position:absolute; left:0; top:0; text-decoration:none; color:inherit;">
+        ⬅ Quay lại
+    </a>
+<div class="info">
+    <h3>@Model.BusName (@Model.Route!.DepartureCity?.CityName → @Model.Route!.DestinationCity?.CityName)</h3>
+    <p>Khởi hành: @Model.DepartureTime.ToString("HH:mm dd/MM/yyyy")</p>
+</div>
+</div>
 
-<h3>Đặt vé: @Model.BusName (@Model.Route!.DepartureCity?.CityName → @Model.Route!.DestinationCity?.CityName)</h3>
-<p>Khởi hành: @Model.DepartureTime.ToString("HH:mm dd/MM/yyyy") - Giá: @Model.Price.ToString("n0") đ</p>
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger">@TempData["Error"]</div>
 }
 
 <style>
+    .info {
+        margin: 40px 0;
+        text-align: center;
+    }
+
     .seat-layout {
         display: flex;
         gap: 40px;
@@ -116,6 +129,7 @@
       <div class="seat-container" style="display:flex; flex-direction:row; gap:20px; padding:15px; border:2px solid #eee; border-radius:10px; background:#f9f9f9; align-items:flex-start;">
     <!-- Ghế + form -->
     <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
+                <h4 style="text-align:left; margin-bottom:15px; font-weight: bold;">Chọn ghế</h4>
         <div class="bus-container" id="seatGrid" style="min-width:300px; min-height:200px;"></div>
         <form method="post" id="bookingForm" class="submit-button" asp-controller="Tickets" asp-action="Book">
             <input type="hidden" name="seatNumbers" id="seatNumbers" />
@@ -143,23 +157,60 @@
     <!-- Bên phải: thông tin chuyến đi + chi tiết giá -->
     <div class="info-area">
         <div class="card">
-            <h4>Thông tin lượt đi</h4>
-            <p><b>Tuyến xe:</b> @Model.Route.DepartureCity.CityName - @Model.Route.DestinationCity.CityName</p>
-            <p><b>Thời gian xuất bến:</b> @Model.DepartureTime.ToString("HH:mm dd/MM/yyyy")</p>
-            <p><b>Số lượng ghế:</b> <span id="seatCount">0</span> Ghế</p>
-            <p><b>Số ghế:</b> <span id="seatList">-</span></p>
-            <p><b>Tổng tiền lượt đi:</b> <span id="totalPriceTop">0</span>đ</p>
+            <h4 style="font-weight: bold; margin-bottom: 20px">Thông tin lượt đi</h4>
+            <div class="info-row">
+                <span class="label">Tuyến xe:</span>
+                <span class="value">@Model.Route.DepartureCity.CityName - @Model.Route.DestinationCity.CityName</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Thời gian xuất bến:</span>
+                <span class="value" style="color: #28a745">@Model.DepartureTime.ToString("HH:mm dd/MM/yyyy")</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Số lượng ghế:</span>
+                <span class="value" id="seatCount">0</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Số ghế:</span>
+                <span class="value" id="seatList">-</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Tổng tiền lượt đi:</span>
+                <span class="value text-danger" id="totalPriceTop">0 đ</span>
+            </div>
         </div>
 
+
         <div class="card">
-            <h4>Chi tiết giá <span style="color:orange;">&#9432;</span></h4>
-            <p><b>Giá vé lượt đi:</b> <span id="totalPriceDetail">0</span>đ</p>
-            <p><b>Phí thanh toán:</b> 0đ</p>
+            <h4 style="font-weight: bold; margin-bottom: 20px">Chi tiết giá <span style="color:orange;">&#9432;</span></h4>
+            <div class="info-row">
+                <span class="label">Giá vé lượt đi:</span>
+                <span class="value text-danger" id="totalPriceDetail">0 đ</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Phí thanh toán:</span>
+                <span class="value">0đ</span>
+            </div>
             <hr>
-            <p><b>Tổng tiền:</b> <span id="totalPriceBottom">0</span>đ</p>
+            <div class="info-row">
+                <span class="label">Tổng tiền:</span>
+                <span class="value text-danger" id="totalPriceBottom">0 đ</span>
+            </div>
         </div>
     </div>
 </div>
+<style>
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.info-row .value {
+    text-align: right;
+    font-weight: 600;
+}
+</style>
 
 @section Scripts {
     <script>

@@ -280,8 +280,8 @@
     <div class="search-item" id="fromBox">
         <i class="bi bi-bus-front"></i>
         <div>
-            <label style="font-weight:bold">Điểm đến</label>
-            <input type="text" id="from" name="from" placeholder="Nhập điểm đi" autocomplete="off" value="TP. Hồ Chí Minh" data-initial="TP. Hồ Chí Minh" />
+            <label style="font-weight:bold">Điểm đi</label>
+            <input type="text" id="from" name="from" placeholder="Nhập điểm đi" autocomplete="off" value="Hồ Chí Minh" data-initial="TP. Hồ Chí Minh" />
         </div>
 
         <div id="fromDropdown" class="city-dropdown">
@@ -305,7 +305,7 @@
     <div class="search-item to-box">
         <i class="bi bi-bus-front"></i>
         <div>
-            <label style="font-weight:bold">Điểm đi</label>
+            <label style="font-weight:bold">Điểm đến</label>
             <input type="text" id="to" name="to" placeholder="Nhập điểm đến" autocomplete="off" value="Cần Thơ" data-initial="Cần Thơ" />
         </div>
 
@@ -472,25 +472,41 @@
     }
 </style>
 
-<div class="d-flex overflow-auto gap-3">
-    @foreach (var t in Model.Take(3))
+<div class="d-flex flex-wrap gap-4">
+    @foreach (var t in Model.Take(4))
     {
-        <div class="card" style="min-width: 300px;">
-            <img class="card-img-top" src="@(string.IsNullOrEmpty(t.ImagePath) ? "/images/busvt.jpg" : t.ImagePath)" alt="bus" />
+        <div class="card shadow-sm border-0 rounded-3" style="width: 300px; transition: transform 0.3s;">
+            <div class="position-relative">
+                <img class="card-img-top rounded-top" src="@(string.IsNullOrEmpty(t.ImagePath) ? "/images/busvt.jpg" : t.ImagePath)" alt="bus" style="height:180px; object-fit:cover;" />
+            </div>
             <div class="card-body">
                 <h5 class="card-title">@t.BusName</h5>
-                <p class="card-text">
-                    @t.Route!.DepartureCity!.CityName → @t.Route!.DestinationCity!.CityName <br />
-                    Khởi hành: @t.DepartureTime.ToString("HH:mm dd/MM/yyyy")<br />
-                    Đến nơi: @t.ArrivalTime.ToString("HH:mm dd/MM/yyyy")<br />
-                    Giá: @t.Price.ToString("n0") đ
+                <p class="mb-2" style="font-size:0.95rem; display: flex; flex-direction: column; gap: 2px; margin:0; padding:0;">
+                    <span style="display: flex; align-items: center; gap: 4px; margin: 0;">
+                        <!-- Chấm đỏ rỗng -->
+                        <svg width="20" height="20" style="vertical-align: middle;">
+                            <circle cx="9" cy="9.5" r="6" stroke="#EC0000" stroke-width="6" fill="none"></circle>
+                        </svg>
+                        <span style="font-weight: bold; margin-left: 20px; font-size: 18px">@t.Route!.DepartureCity!.CityName</span>
+                    </span>
+
+                    <span style="font-size:1.5rem; color:#555; line-height:1;">&#x21C5;</span>
+
+                    <span style="display: flex; align-items: center; gap: 4px; margin: 6px 0 0 0;">
+                        <!-- Chấm vàng rỗng -->
+                        <svg width="20" height="20" style="vertical-align: middle;">
+                            <circle cx="9" cy="9.5" r="6" stroke="#FFD700" stroke-width="6" fill="none"></circle>
+                        </svg>
+                        <span style="font-weight: bold; margin-left: 20px; font-size: 18px">@t.Route!.DestinationCity!.CityName</span>
+                    </span>
                 </p>
-                <a class="btn btn-success" href="/Tickets/Book/@t.TripId">Đặt vé</a>
+
+                <p class="fw-bold text-dark mb-0 fs-4">@t.Price.ToString("n0") đ/vé</p>
+                <a class="btn btn-success w-100 mt-2" href="/Tickets/Book/@t.TripId">Đặt vé</a>
             </div>
         </div>
     }
 </div>
-
 
 <!-- Khuyến mãi -->
 <h3 class="mb-4" style="padding: 40px 0 20px 0; font-size: 24px; color: #484848">Khuyến mãi nổi bật</h3>   <!-- Thêm dòng tiêu đề -->

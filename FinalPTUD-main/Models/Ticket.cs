@@ -1,5 +1,4 @@
-﻿
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BusTicketBooking.Models
@@ -23,17 +22,15 @@ namespace BusTicketBooking.Models
         [ForeignKey(nameof(UserId))]
         public User? User { get; set; }
 
-
         [Range(0, 999999)]
         public decimal Price { get; set; } = 0;
 
         public int? ReturnSeatNumber { get; set; }  // ghế chiều về (nullable)
 
-        public ICollection<Payment>? Payments { get; set; }
+        public ICollection<Payment>? Payments { get; set; } = new List<Payment>();
 
         public DateTime? ExpireAt { get; set; } // thời điểm hết hạn giữ ghế
 
-        // Thêm TransactionCode
         public string TransactionCode { get; set; } = string.Empty;
 
         public DateTime DepartureDate { get; set; }
@@ -55,9 +52,12 @@ namespace BusTicketBooking.Models
         [Key]
         public int Id { get; set; }
 
+        [Required]
         public int TicketId { get; set; }
-        public Ticket Ticket { get; set; }
+        [ForeignKey(nameof(TicketId))]
+        public Ticket Ticket { get; set; } = null!;
 
+        [Required]
         public int SeatNumber { get; set; }
     }
 }
